@@ -19,7 +19,9 @@ import urllib.parse
 import urllib.request
 
 API = "https://api.openalex.org/works"
-MAILTO = os.environ.get("OPENALEX_MAILTO", "seismo-lit@example.com")
+# polite pool 需要一个邮箱。这里用 GitHub noreply 地址（不暴露真实邮箱）。
+# 可用环境变量 OPENALEX_MAILTO 覆盖成自己的邮箱，能进入更快的专属池。
+MAILTO = os.environ.get("OPENALEX_MAILTO") or "250457080+SU123112@users.noreply.github.com"
 
 # ---------------------------------------------------------------- 期刊配置
 # 想扩展期刊，只需在这里加一行（ISSN 可在 https://openalex.org/sources 查）
@@ -60,8 +62,13 @@ SELECT = ",".join([
 ])
 
 
-def http_json(url, retries=4):
-    """带重试的 GET，返回解析后的 JSON。"""
+def http_json(url, retries=8):
+    """带重试的 GET，返回解析后的 JSON。
+
+    GitHub Actions 的出口 IP 被大量任务共享，OpenAlex 对其经常返回 429，
+    因此对限流/网关类错误用指数退避（最长 60s），并尊重 Retry-After 头。
+    """
+    last = None
     for attempt in range(retries):
         try:
             req = urllib.request.Request(url, headers={
@@ -70,11 +77,21 @@ def http_json(url, retries=4):
             })
             with urllib.request.urlopen(req, timeout=60) as resp:
                 return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            last = exc
+            if exc.code in (429, 500, 502, 503) and attempt < retries - 1:
+                ra = (exc.headers or {}).get("Retry-After", "")
+                wait = float(ra) if str(ra).strip().isdigit() else min(60.0, 2.0 ** attempt)
+                print(f"    [HTTP {exc.code}，重试 {attempt + 1}/{retries}] 等 {wait:.0f}s", file=sys.stderr)
+                time.sleep(wait)
+                continue
+            raise
         except Exception as exc:                       # noqa: BLE001
-            wait = 2 ** attempt
-            print(f"    [重试 {attempt + 1}/{retries}] {exc} -> {wait}s 后重试", file=sys.stderr)
+            last = exc
+            wait = min(60.0, 2.0 ** attempt)
+            print(f"    [重试 {attempt + 1}/{retries}] {exc} -> {wait:.0f}s 后重试", file=sys.stderr)
             time.sleep(wait)
-    raise RuntimeError(f"请求失败：{url}")
+    raise RuntimeError(f"重试 {retries} 次后仍失败：{url}（最后错误：{last}）")
 
 
 def fetch_journal(key, cfg, out_path, page_size=200):
@@ -103,7 +120,7 @@ def fetch_journal(key, cfg, out_path, page_size=200):
         cursor = data["meta"].get("next_cursor")
         if not data.get("results"):
             break
-        time.sleep(0.25)                                # 对 API 友好一点
+        time.sleep(0.5)                                 # 对 API 友好一点
 
     with open(out_path, "w", encoding="utf-8") as fh:
         json.dump(records, fh, ensure_ascii=False)
