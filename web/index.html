@@ -99,7 +99,7 @@
   .years .bar{flex:1;background:#dbe3ea;border-radius:2px 2px 0 0;position:relative;cursor:pointer;min-height:2px;transition:background .12s}
   .years .bar:hover{background:var(--accent)}
   .years .bar.on{background:var(--accent)}
-  .years .bar span{position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);font-size:9.5px;color:var(--ink-3);white-space:nowrap}
+  .years .bar span{position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);font-size:10.5px;color:var(--ink-2);white-space:nowrap}
   .years-wrap{padding-bottom:20px}
   .years-legend{padding:0 14px 12px;font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between}
   .years-legend a{cursor:pointer}
@@ -342,13 +342,15 @@
   // ---------------- 年份直方图 ----------------
   var yBox = $('years'), yAll = M.years||[];
   var maxN = Math.max.apply(null, yAll.map(function(x){return x[1];}).concat([1]));
+  // 标签间隔随柱数自适应：约 8 个标签，且取 5 的倍数，避免文字互相重叠
+  var lblStep = Math.max(5, Math.ceil(yAll.length/8/5)*5);
   yAll.forEach(function(pair){
     var y = pair[0], n = pair[1];
     var b = document.createElement('div');
     b.className='bar'; b.dataset.y = y;
     b.style.height = Math.max(2, Math.round(n/maxN*74)) + 'px';
     b.title = y + ' 年：' + n + ' 篇';
-    if(y%5===0 || y===yAll[0][0] || y===yAll[yAll.length-1][0])
+    if(y % lblStep === 0)
       b.innerHTML = '<span>'+y+'</span>';
     b.onclick = function(){
       if(S.yMin===y && S.yMax===y){ S.yMin=S.yMax=null; }
