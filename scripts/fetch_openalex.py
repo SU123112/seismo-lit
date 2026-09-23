@@ -62,11 +62,12 @@ SELECT = ",".join([
 ])
 
 
-def http_json(url, retries=8):
+def http_json(url, retries=12):
     """带重试的 GET，返回解析后的 JSON。
 
-    GitHub Actions 的出口 IP 被大量任务共享，OpenAlex 对其经常返回 429，
-    因此对限流/网关类错误用指数退避（最长 60s），并尊重 Retry-After 头。
+    GitHub Actions 的出口 IP 被大量任务共享，OpenAlex 对其经常持续返回 429，
+    因此对限流/网关类错误用指数退避（单次最长 90s，总预算约 7 分钟），
+    并尊重 Retry-After 头。
     """
     last = None
     for attempt in range(retries):
@@ -81,14 +82,14 @@ def http_json(url, retries=8):
             last = exc
             if exc.code in (429, 500, 502, 503) and attempt < retries - 1:
                 ra = (exc.headers or {}).get("Retry-After", "")
-                wait = float(ra) if str(ra).strip().isdigit() else min(60.0, 2.0 ** attempt)
+                wait = float(ra) if str(ra).strip().isdigit() else min(90.0, 2.0 ** attempt)
                 print(f"    [HTTP {exc.code}，重试 {attempt + 1}/{retries}] 等 {wait:.0f}s", file=sys.stderr)
                 time.sleep(wait)
                 continue
             raise
         except Exception as exc:                       # noqa: BLE001
             last = exc
-            wait = min(60.0, 2.0 ** attempt)
+            wait = min(90.0, 2.0 ** attempt)
             print(f"    [重试 {attempt + 1}/{retries}] {exc} -> {wait:.0f}s 后重试", file=sys.stderr)
             time.sleep(wait)
     raise RuntimeError(f"重试 {retries} 次后仍失败：{url}（最后错误：{last}）")
