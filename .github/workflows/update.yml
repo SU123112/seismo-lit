@@ -1,8 +1,10 @@
 name: 更新地震学文献库
 
 on:
+  push:
+    branches: [main]         # 每次推送都重新部署（数据更新后直接 push 即可）
   schedule:
-    - cron: '0 2 * * 1'      # 每周一 02:00 UTC（北京时间 10:00）
+    - cron: '0 2 * * 1'      # 每周一 02:00 UTC（北京时间 10:00）自动更新数据
   workflow_dispatch:          # 也支持在 Actions 页面手动触发
 
 permissions:
@@ -33,6 +35,8 @@ jobs:
         run: python scripts/build_site.py
 
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true     # 首次运行自动开启 GitHub Pages，无需手动到 Settings 里点
 
       - uses: actions/upload-pages-artifact@v3
         with:
