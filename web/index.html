@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>地震学文献库 · Seismology Literature Hub</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#ffffff; --line:#e3e6ea; --line-2:#eef0f3;
+    --ink:#16202b; --ink-2:#5a6672; --ink-3:#8c98a4;
+    --accent:#c0392b; --accent-2:#8e2a1f; --accent-soft:#fdf0ee;
+    --blue:#1f5f8b; --blue-soft:#eef4f9;
+    --tag:#eef1f4; --shadow:0 1px 2px rgba(16,24,32,.06),0 4px 14px rgba(16,24,32,.05);
+    --radius:10px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:14px/1.65 "Segoe UI","PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  /* ---------- 页头 ---------- */
+  header{
+    background:linear-gradient(135deg,#16202b 0%,#22303f 55%,#2d4a5e 100%);
+    color:#fff; padding:26px 28px 22px;
+  }
+  header h1{margin:0;font-size:23px;letter-spacing:.3px;font-weight:650}
+  header h1 .en{font-weight:400;opacity:.62;font-size:15px;letter-spacing:1px;margin-left:10px}
+  header .sub{margin-top:7px;font-size:13px;color:#b8c4cf;display:flex;flex-wrap:wrap;gap:6px 18px}
+  header .sub b{color:#fff;font-weight:600}
+  header .note{margin-top:12px;font-size:12px;color:#93a2b0;line-height:1.7;max-width:1000px}
+  header .note code{background:rgba(255,255,255,.1);padding:1px 5px;border-radius:4px;font-size:11.5px}
+
+  .wrap{max-width:1340px;margin:0 auto;padding:18px 20px 60px}
+
+  /* ---------- 工具条 ---------- */
+  .toolbar{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 16px;box-shadow:var(--shadow);position:sticky;top:0;z-index:30;
+  }
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .row + .row{margin-top:11px}
+  .search{flex:1 1 340px;min-width:240px;position:relative}
+  .search input{
+    width:100%;padding:10px 34px 10px 34px;border:1px solid var(--line);
+    border-radius:8px;font-size:14px;background:#fbfcfd;color:var(--ink);outline:none;
+    font-family:inherit;
+  }
+  .search input:focus{border-color:#9db8cc;background:#fff;box-shadow:0 0 0 3px var(--blue-soft)}
+  .search .ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--ink-3);font-size:13px}
+  .search .clr{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:none;
+    color:var(--ink-3);cursor:pointer;font-size:16px;line-height:1;padding:2px 4px;display:none}
+  .search .clr:hover{color:var(--accent)}
+
+  select,.btn{
+    padding:8px 11px;border:1px solid var(--line);border-radius:8px;background:#fff;
+    font-size:13px;color:var(--ink);cursor:pointer;font-family:inherit;
+  }
+  select:focus{outline:none;border-color:#9db8cc}
+  .btn:hover{border-color:#b9c3cd;background:#fafbfc}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+  label.chk{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-2);cursor:pointer;
+    padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;user-select:none}
+  label.chk:hover{border-color:#b9c3cd}
+  label.chk.on{background:var(--accent-soft);border-color:#e8c4be;color:var(--accent-2)}
+  label.chk input{accent-color:var(--accent);margin:0}
+  .chip{
+    display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;
+    border:1px solid var(--line);background:#fff;font-size:12.5px;color:var(--ink-2);cursor:pointer;user-select:none;
+  }
+  .chip:hover{border-color:#b9c3cd}
+  .chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+  .chip .n{opacity:.65;font-size:11.5px}
+  .lbl{font-size:12px;color:var(--ink-3);letter-spacing:.4px;min-width:52px}
+
+  /* ---------- 主区 ---------- */
+  .main{display:grid;grid-template-columns:236px 1fr;gap:18px;margin-top:18px;align-items:start}
+  @media(max-width:900px){.main{grid-template-columns:1fr}}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .card h3{margin:0;padding:12px 14px;font-size:13px;letter-spacing:.4px;color:var(--ink-2);
+    border-bottom:1px solid var(--line-2);font-weight:600;display:flex;justify-content:space-between;align-items:center}
+  .cats{padding:6px}
+  .cat{display:flex;gap:8px;align-items:center;padding:7px 9px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--ink-2)}
+  .cat:hover{background:#f3f5f7}
+  .cat.on{background:var(--blue-soft);color:var(--blue);font-weight:600}
+  .cat .dot{width:7px;height:7px;border-radius:50%;background:#c7ced6;flex:0 0 auto}
+  .cat.on .dot{background:var(--blue)}
+  .cat .n{margin-left:auto;font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+  .cat.on .n{color:var(--blue)}
+
+  /* 年份直方图 */
+  .years{padding:12px 14px 8px;display:flex;align-items:flex-end;gap:2px;height:96px}
+  .years .bar{flex:1;background:#dbe3ea;border-radius:2px 2px 0 0;position:relative;cursor:pointer;min-height:2px;transition:background .12s}
+  .years .bar:hover{background:var(--accent)}
+  .years .bar.on{background:var(--accent)}
+  .years .bar span{position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);font-size:9.5px;color:var(--ink-3);white-space:nowrap}
+  .years-wrap{padding-bottom:20px}
+  .years-legend{padding:0 14px 12px;font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between}
+  .years-legend a{cursor:pointer}
+
+  /* 结果列表 */
+  .bar-info{padding:11px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;
+    border-bottom:1px solid var(--line-2);font-size:13px;color:var(--ink-2)}
+  .bar-info b{color:var(--ink);font-size:15px}
+  .list{padding:2px 0}
+  .item{padding:15px 18px;border-bottom:1px solid var(--line-2)}
+  .item:last-child{border-bottom:0}
+  .item:hover{background:#fcfdfe}
+  .t{font-size:15.5px;font-weight:600;line-height:1.5;color:var(--ink);display:block;margin-bottom:5px}
+  a.t:hover{color:var(--blue);text-decoration:none}
+  .meta{font-size:12.5px;color:var(--ink-3);display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;margin-bottom:6px}
+  .meta .jn{color:var(--accent);font-weight:600}
+  .meta .oa{background:#e9f6ee;color:#1f7a45;padding:1px 7px;border-radius:4px;font-size:11px;font-weight:600}
+  .abs{font-size:13.2px;color:var(--ink-2);line-height:1.72}
+  .abs.clip{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .tags{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .tag{background:var(--tag);color:var(--ink-2);padding:2px 9px;border-radius:5px;font-size:11.5px;cursor:pointer}
+  .tag:hover{background:#e2e7ec}
+  .tag.main{background:var(--blue-soft);color:var(--blue);font-weight:600}
+  .more{background:none;border:0;color:var(--ink-3);font-size:12px;cursor:pointer;padding:0 4px;font-family:inherit}
+  .more:hover{color:var(--blue)}
+  .acts{margin-left:auto;display:flex;gap:8px}
+  .acts button{background:none;border:1px solid var(--line);border-radius:6px;color:var(--ink-3);
+    font-size:11.5px;padding:3px 9px;cursor:pointer;font-family:inherit}
+  .acts button:hover{border-color:#b9c3cd;color:var(--ink)}
+
+  .pager{display:flex;justify-content:center;gap:6px;padding:16px;flex-wrap:wrap;align-items:center}
+  .pager button{min-width:34px;padding:6px 9px;border:1px solid var(--line);background:#fff;border-radius:7px;
+    cursor:pointer;font-size:13px;color:var(--ink-2);font-family:inherit}
+  .pager button:hover:not(:disabled){border-color:#b9c3cd;color:var(--ink)}
+  .pager button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  .pager button:disabled{opacity:.40;cursor:not-allowed}
+  .pager .info{font-size:12.5px;color:var(--ink-3);margin:0 6px}
+
+  .empty{padding:60px 20px;text-align:center;color:var(--ink-3)}
+  .empty div:first-child{font-size:30px;margin-bottom:10px;opacity:.5}
+
+  footer{max-width:1340px;margin:0 auto;padding:0 20px 40px;font-size:12px;color:var(--ink-3);line-height:1.9}
+  footer code{background:#eceff2;padding:1px 5px;border-radius:4px}
+  .toast{position:fixed;left:50%;bottom:34px;transform:translateX(-50%) translateY(20px);
+    background:#16202b;color:#fff;padding:9px 18px;border-radius:8px;font-size:13px;opacity:0;
+    transition:all .22s;pointer-events:none;z-index:99}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>地震学文献库<span class="en">SEISMOLOGY LITERATURE HUB</span></h1>
+  <div class="sub">
+    <span>收录期刊：<b>Science</b> · <b>Nature</b> · <b>Nature Geoscience</b></span>
+    <span>文献总量：<b id="hTotal">—</b> 篇</span>
+    <span>年份跨度：<b id="hRange">—</b></span>
+    <span>数据更新：<b id="hDate">—</b></span>
+  </div>
+  <div class="note">
+    数据来源 OpenAlex 开放学术图谱（覆盖 Crossref / PubMed 全量元数据），按「标题 + 摘要 + 主题标签」三层信号做地震学相关性过滤与主题分类。
+    <br>默认视图为 <b>1980 年以来的研究论文</b>（约 2800 篇）；Nature 早期存档短文、书评、更正等可关闭下方「仅研究论文」开关查看。
+    点击标题跳转 DOI 原文，支持空格分隔的多关键词 AND 检索。
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="toolbar">
+    <div class="row">
+      <div class="search">
+        <span class="ico">⌕</span>
+        <input id="q" type="search" placeholder="搜索标题 / 作者 / 摘要 / 关键词…（如 megathrust，或 2023 receiver function）" autocomplete="off">
+        <button class="clr" id="qClr" title="清空">×</button>
+      </div>
+      <select id="sort">
+        <option value="year">按年份（新→旧）</option>
+        <option value="cited">按被引次数</option>
+        <option value="relevance">按相关度</option>
+      </select>
+      <select id="size">
+        <option value="20">20 条/页</option>
+        <option value="50">50 条/页</option>
+        <option value="100">100 条/页</option>
+      </select>
+      <label class="chk on" id="resWrap"><input type="checkbox" id="res" checked>仅研究论文</label>
+      <label class="chk" id="oaWrap"><input type="checkbox" id="oa">仅开放获取</label>
+      <button class="btn" id="reset">重置筛选</button>
+    </div>
+    <div class="row">
+      <span class="lbl">年份</span>
+      <div class="row" id="yrQuick"></div>
+    </div>
+    <div class="row">
+      <span class="lbl">期刊</span>
+      <div class="row" id="jChips"></div>
+    </div>
+    <div class="row">
+      <span class="lbl">类目</span>
+      <div class="row" id="cChips"></div>
+    </div>
+    <div class="row">
+      <span class="lbl">操作</span>
+      <button class="btn" id="expBib">导出 BibTeX</button>
+      <button class="btn" id="expCsv">导出 CSV（Excel）</button>
+      <button class="btn" id="copyLink">复制当前筛选链接</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div>
+      <div class="card">
+        <h3>主题类目 <span style="font-weight:400;color:var(--ink-3);font-size:11.5px">点击多选</span></h3>
+        <div class="cats" id="cats"></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h3>年份分布 <span style="font-weight:400;color:var(--ink-3);font-size:11.5px">点击柱选年份</span></h3>
+        <div class="years-wrap">
+          <div class="years" id="years"></div>
+          <div class="years-legend">
+            <span id="yrNow">全部年份</span>
+            <a id="yrClr">清除</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="bar-info">
+        <span>共筛出 <b id="cnt">0</b> 篇<span id="hint" style="color:var(--ink-3);font-size:12.5px"></span></span>
+        <span id="pageInfo" style="font-size:12.5px;color:var(--ink-3)"></span>
+      </div>
+      <div class="list" id="list"></div>
+      <div class="pager" id="pager"></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  数据来源：OpenAlex（<a href="https://openalex.org" target="_blank" rel="noopener">openalex.org</a>）· CC0 许可 ·
+  文献版权归 Science / Nature / Nature Geoscience 及其作者所有，本页仅提供索引与检索，不存储原文。
+  <br>更新数据：在项目根目录执行 <code>python scripts/fetch_openalex.py &amp;&amp; python scripts/build_site.py</code>，然后刷新页面。
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script src="data.js"></script>
+<script>
+(function(){
+  "use strict";
+  if(!window.PAPERS){
+    document.getElementById('list').innerHTML =
+      '<div class="empty"><div>⚠</div><div>未能加载 <code>data.js</code>。<br>请在本目录下启动一个本地服务器，例如：<br>' +
+      '<code>python -m http.server 8000</code>，然后访问 http://localhost:8000</div></div>';
+    return;
+  }
+  var P = window.PAPERS, M = window.META || {};
+  var CATNAME = {}; (M.categories||[]).forEach(function(c){ CATNAME[c.id]=c.name; });
+  var CATDESC = {}; (M.categories||[]).forEach(function(c){ CATDESC[c.id]=c.desc; });
+
+  // 默认视图：1980 年以来的研究论文
+  var DEF = { yMin:1980, yMax:null, research:true };
+  var S = {
+    q:'', journals:new Set(), cats:new Set(), yMin:DEF.yMin, yMax:DEF.yMax,
+    oa:false, research:DEF.research, sort:'year', page:1, size:20
+  };
+
+  var $ = function(id){ return document.getElementById(id); };
+  var esc = function(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+
+  // ---------------- 头部信息 ----------------
+  $('hTotal').textContent = (M.total||P.length).toLocaleString();
+  $('hDate').textContent = M.generated || '—';
+  var ys = (M.years||[]).map(function(x){return x[0];});
+  $('hRange').textContent = ys.length ? ys[0]+' – '+ys[ys.length-1] : '—';
+
+  // ---------------- 期刊 / 类目 chip ----------------
+  var jChips = $('jChips');
+  (M.journals||[]).forEach(function(pair){
+    var j = pair[0], n = pair[1];
+    var el = document.createElement('span');
+    el.className='chip'; el.innerHTML = esc(j)+' <span class="n">'+n+'</span>';
+    el.onclick = function(){ toggle(S.journals, j, el); S.page=1; render(); };
+    jChips.appendChild(el);
+  });
+  var cChips = $('cChips');
+  (M.categories||[]).forEach(function(c){
+    if(!c.count) return;
+    var el = document.createElement('span');
+    el.className='chip'; el.title = c.desc||'';
+    el.innerHTML = esc(c.name)+' <span class="n">'+c.count+'</span>';
+    el.onclick = function(){ toggle(S.cats, c.id, el); S.page=1; render(); };
+    cChips.appendChild(el);
+  });
+
+  // 侧边类目列表
+  var catsBox = $('cats');
+  (M.categories||[]).forEach(function(c){
+    if(!c.count) return;
+    var el = document.createElement('div');
+    el.className='cat'; el.title = c.desc||'';
+    el.innerHTML = '<span class="dot"></span><span>'+esc(c.name)+'</span><span class="n">'+c.count+'</span>';
+    el.onclick = function(){ toggle(S.cats, c.id, el); syncChips(); S.page=1; render(); };
+    el.dataset.cid = c.id;
+    catsBox.appendChild(el);
+  });
+
+  function toggle(set, val, el){ set.has(val) ? set.delete(val) : set.add(val); el.classList.toggle('on'); }
+  function syncChips(){
+    Array.prototype.forEach.call(cChips.children, function(el,i){
+      var c = M.categories[i];
+      if(c) el.classList.toggle('on', S.cats.has(c.id));
+    });
+  }
+
+  // ---------------- 年份快捷区间 ----------------
+  var QUICK = [
+    {label:'全部',  min:null,   max:null},
+    {label:'1980 至今', min:1980, max:null},
+    {label:'2000 至今', min:2000, max:null},
+    {label:'近 10 年',  min:(new Date().getFullYear()-9), max:null},
+    {label:'近 5 年',   min:(new Date().getFullYear()-4), max:null}
+  ];
+  var yrQuick = $('yrQuick');
+  QUICK.forEach(function(q){
+    var el = document.createElement('span');
+    el.className = 'chip'; el.textContent = q.label;
+    el.onclick = function(){ S.yMin=q.min; S.yMax=q.max; S.page=1; render(); };
+    el.dataset.min = q.min===null ? '' : q.min;
+    yrQuick.appendChild(el);
+  });
+  function syncQuick(){
+    Array.prototype.forEach.call(yrQuick.children, function(el){
+      var m = el.dataset.min==='' ? null : +el.dataset.min;
+      el.classList.toggle('on', m===S.yMin && (S.yMax===null));
+    });
+  }
+
+  // ---------------- 年份直方图 ----------------
+  var yBox = $('years'), yAll = M.years||[];
+  var maxN = Math.max.apply(null, yAll.map(function(x){return x[1];}).concat([1]));
+  yAll.forEach(function(pair){
+    var y = pair[0], n = pair[1];
+    var b = document.createElement('div');
+    b.className='bar'; b.dataset.y = y;
+    b.style.height = Math.max(2, Math.round(n/maxN*74)) + 'px';
+    b.title = y + ' 年：' + n + ' 篇';
+    if(y%5===0 || y===yAll[0][0] || y===yAll[yAll.length-1][0])
+      b.innerHTML = '<span>'+y+'</span>';
+    b.onclick = function(){
+      if(S.yMin===y && S.yMax===y){ S.yMin=S.yMax=null; }
+      else if(S.yMin===null){ S.yMin=S.yMax=y; }
+      else { var a=Math.min(S.yMin,y), z=Math.max(S.yMax,y); S.yMin=a; S.yMax=z; }
+      S.page=1; render();
+    };
+    yBox.appendChild(b);
+  });
+  $('yrClr').onclick = function(){ S.yMin=S.yMax=null; S.page=1; render(); };
+
+  // ---------------- 筛选 ----------------
+  var _idx = null;
+  function index(){
+    if(_idx && _idx.length===P.length) return _idx;
+    _idx = P.map(function(p){
+      return ((p.title||'')+' '+(p.abstract||'')+' '+(p.authors||[]).join(' ')+' '+
+              (p.topic||'')+' '+(p.journal||'')+' '+(p.doi||'')).toLowerCase();
+    });
+    return _idx;
+  }
+  function tokens(q){
+    return q.trim().toLowerCase().split(/\s+/).filter(function(t){return t;});
+  }
+
+  function filtered(){
+    var tk = tokens(S.q), idx = index(), out = [];
+    for(var i=0;i<P.length;i++){
+      var p = P[i];
+      if(S.journals.size && !S.journals.has(p.journal)) continue;
+      if(S.cats.size){
+        var hit=false;
+        if(S.cats.has(p.cat)) hit=true;
+        else { for(var j=0;j<(p.cats||[]).length;j++) if(S.cats.has(p.cats[j])){hit=true;break;} }
+        if(!hit) continue;
+      }
+      if(S.yMin!==null){
+        var hi = (S.yMax===null ? 9999 : S.yMax);
+        if(!p.year || p.year<S.yMin || p.year>hi) continue;
+      }
+      if(S.research && !p.research) continue;
+      if(S.oa && !p.oa) continue;
+      if(tk.length){ var s=idx[i]; for(var k=0;k<tk.length;k++){ if(s.indexOf(tk[k])===-1){ s=null; break; } } if(!s) continue; }
+      out.push(p);
+    }
+    var kw = tk;
+    out.sort(function(a,b){
+      if(S.sort==='cited') return (b.cited||0)-(a.cited||0) || (b.year||0)-(a.year||0);
+      if(S.sort==='relevance'){
+        var at=(a.title||'').toLowerCase(), bt=(b.title||'').toLowerCase();
+        var sa=0,sb=0;
+        kw.forEach(function(t){ if(at.indexOf(t)>=0) sa+=5; if(bt.indexOf(t)>=0) sb+=5; });
+        return sb-sa || (b.cited||0)-(a.cited||0);
+      }
+      return (b.year||0)-(a.year||0) || (b.cited||0)-(a.cited||0);
+    });
+    return out;
+  }
+
+  // ---------------- 渲染 ----------------
+  var CUR = [];
+  function render(){
+    CUR = filtered();
+    // 年份柱高亮
+    var hiY = (S.yMax===null ? 9999 : S.yMax);
+    Array.prototype.forEach.call(yBox.children, function(b){
+      b.classList.toggle('on', S.yMin!==null && +b.dataset.y>=S.yMin && +b.dataset.y<=hiY);
+    });
+    $('yrNow').textContent = S.yMin===null ? '全部年份' : (S.yMax===null ? S.yMin+' 年至今' : (S.yMin===S.yMax ? S.yMin+' 年' : S.yMin+' – '+S.yMax+' 年'));
+    syncQuick();
+
+    var pages = Math.max(1, Math.ceil(CUR.length/S.size));
+    if(S.page>pages) S.page = pages;
+    var st = (S.page-1)*S.size, page = CUR.slice(st, st+S.size);
+
+    $('cnt').textContent = CUR.length.toLocaleString();
+    var tags=[];
+    if(S.research) tags.push('仅研究论文');
+    if(S.yMin!==null) tags.push($('yrNow').textContent);
+    $('hint').textContent = CUR.length===P.length ? '（全库）'
+      : '（'+(tags.length?tags.join(' · '):'已应用筛选')+'）';
+    $('pageInfo').textContent = '第 '+S.page+' / '+pages+' 页';
+
+    var list = $('list');
+    if(!CUR.length){
+      list.innerHTML = '<div class="empty"><div>○</div><div>没有符合条件的文献，试试放宽筛选条件。</div></div>';
+    } else {
+      list.innerHTML = page.map(function(p,i){
+        var abs = p.abstract ? esc(p.abstract) : '<i>（OpenAlex 未提供摘要，请点击标题查看原文）</i>';
+        var au = (p.authors||[]);
+        var auTxt = au.length ? (au.length>3 ? au.slice(0,3).join(', ')+' 等 '+au.length+' 位作者' : au.join(', ')) : '作者信息缺失';
+        var tags = (p.cats||[]).map(function(c){
+          return '<span class="tag'+(c===p.cat?' main':'')+'" data-tag="'+esc(c)+'">'+esc(CATNAME[c]||c)+'</span>';
+        }).join('');
+        if(p.topic) tags += '<span class="tag" style="background:#f5f7f9;color:#8c98a4">'+esc(p.topic)+'</span>';
+        var bib = '<button data-bib="'+(st+i)+'">BibTeX</button>';
+        return '<div class="item">'+
+          '<a class="t" href="https://doi.org/'+esc(p.doi)+'" target="_blank" rel="noopener">'+esc(p.title)+'</a>'+
+          '<div class="meta">'+
+            '<span class="jn">'+esc(p.journal)+'</span>'+
+            '<span>'+(p.date||p.year||'')+'</span>'+
+            '<span>'+esc(auTxt)+'</span>'+
+            '<span>被引 '+(p.cited||0)+'</span>'+
+            (p.oa?'<span class="oa">开放获取</span>':'')+
+          '</div>'+
+          '<div class="abs clip" data-abs="'+(st+i)+'">'+abs+'</div>'+
+          '<div class="tags">'+tags+
+            '<span class="acts"><button class="more" data-toggle="'+(st+i)+'">展开摘要</button>'+bib+'</span>'+
+          '</div></div>';
+      }).join('');
+    }
+    renderPager(pages);
+    syncHash();
+  }
+
+  function renderPager(pages){
+    var el = $('pager'); el.innerHTML='';
+    if(pages<=1){ return; }
+    var add=function(label,page,on,dis){
+      var b=document.createElement('button'); b.textContent=label;
+      if(on) b.className='on'; if(dis) b.disabled=true;
+      b.onclick=function(){ S.page=page; render(); window.scrollTo({top:0,behavior:'smooth'}); };
+      el.appendChild(b);
+    };
+    add('‹', Math.max(1,S.page-1), false, S.page===1);
+    var start=Math.max(1,S.page-2), end=Math.min(pages,S.page+2);
+    if(start>1){ add(1,1,false); if(start>2) el.insertAdjacentHTML('beforeend','<span class="info">…</span>'); }
+    for(var i=start;i<=end;i++) add(i,i,i===S.page,false);
+    if(end<pages){ if(end<pages-1) el.insertAdjacentHTML('beforeend','<span class="info">…</span>'); add(pages,pages,false); }
+    add('›', Math.min(pages,S.page+1), false, S.page===pages);
+  }
+
+  // ---------------- 交互 ----------------
+  var tm=null;
+  $('q').addEventListener('input', function(e){
+    $('qClr').style.display = e.target.value ? 'block' : 'none';
+    clearTimeout(tm); tm=setTimeout(function(){ S.q=e.target.value; S.page=1; render(); }, 220);
+  });
+  $('q').addEventListener('keydown', function(e){ if(e.key==='Enter'){ S.q=e.target.value; S.page=1; render(); } });
+  $('qClr').onclick = function(){ $('q').value=''; S.q=''; S.page=1; $('qClr').style.display='none'; render(); };
+  $('sort').onchange = function(e){ S.sort=e.target.value; S.page=1; render(); };
+  $('size').onchange = function(e){ S.size=+e.target.value; S.page=1; render(); };
+  $('oa').onchange = function(e){ S.oa=e.target.checked; $('oaWrap').classList.toggle('on',S.oa); S.page=1; render(); };
+  $('res').onchange = function(e){ S.research=e.target.checked; $('resWrap').classList.toggle('on',S.research); S.page=1; render(); };
+  $('reset').onclick = function(){
+    S.q=''; $('q').value=''; $('qClr').style.display='none';
+    S.journals.clear(); S.cats.clear();
+    S.yMin=DEF.yMin; S.yMax=DEF.yMax; S.oa=false; S.research=DEF.research;
+    $('oa').checked=false; $('oaWrap').classList.remove('on');
+    $('res').checked=DEF.research; $('resWrap').classList.toggle('on',DEF.research);
+    S.page=1;
+    Array.prototype.forEach.call(document.querySelectorAll('.chip.on,.cat.on'),function(e){e.classList.remove('on');});
+    render();
+  };
+
+  document.addEventListener('click', function(e){
+    var t = e.target;
+    if(t.dataset && t.dataset.toggle!==undefined){
+      var p = CUR[+t.dataset.toggle], box = t.closest('.item').querySelector('.abs');
+      var open = box.classList.toggle('clip');
+      t.textContent = open ? '展开摘要' : '收起摘要';
+      return;
+    }
+    if(t.dataset && t.dataset.tag!==undefined){
+      var cid = t.dataset.tag;
+      S.cats.clear(); S.cats.add(cid);
+      Array.prototype.forEach.call(document.querySelectorAll('.chip.on,.cat.on'),function(x){x.classList.remove('on');});
+      syncChips();
+      Array.prototype.forEach.call(document.querySelectorAll('.cat'),function(x){ if(x.dataset.cid===cid) x.classList.add('on'); });
+      S.page=1; render(); window.scrollTo({top:0,behavior:'smooth'});
+      return;
+    }
+    if(t.dataset && t.dataset.bib!==undefined){
+      var p2 = CUR[+t.dataset.bib];
+      copy(bibtex(p2)); toast('已复制 BibTeX 引用');
+    }
+  });
+
+  // ---------------- 导出 ----------------
+  function bibtex(p){
+    var key = ((p.first_author||'anon').split(/\s+/).pop()||'anon').toLowerCase().replace(/[^a-z]/g,'') + (p.year||'');
+    var au = (p.authors||[]).join(' and ');
+    return '@article{'+key+',\n  title   = {'+p.title+'},\n  author  = {'+au+'},\n'+
+           '  journal = {'+p.journal+'},\n  year    = {'+(p.year||'')+'},\n'+
+           '  doi     = {'+p.doi+'},\n  note    = {cited: '+(p.cited||0)+'}\n}\n';
+  }
+  function download(name, text){
+    var blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1500);
+  }
+  $('expBib').onclick = function(){
+    if(!CUR.length) return toast('当前没有可导出的文献');
+    download('seismology-'+CUR.length+'.bib', CUR.map(bibtex).join('\n'));
+    toast('已导出 '+CUR.length+' 条 BibTeX');
+  };
+  $('expCsv').onclick = function(){
+    if(!CUR.length) return toast('当前没有可导出的文献');
+    var head = ['Title','First Author','All Authors','Journal','Year','Date','DOI','Citations','OpenAccess','Categories','Abstract'];
+    var rows = CUR.map(function(p){
+      return [p.title, p.first_author, (p.authors||[]).join('; '), p.journal, p.year, p.date,
+              p.doi, p.cited, p.oa?'Yes':'No',
+              (p.cats||[]).map(function(c){return CATNAME[c]||c;}).join(' / '),
+              p.abstract||''].map(function(v){
+        return '"'+String(v==null?'':v).replace(/"/g,'""').replace(/\r?\n/g,' ')+'"';
+      }).join(',');
+    });
+    download('seismology-'+CUR.length+'.csv', '\ufeff'+head.join(',')+'\n'+rows.join('\n'));
+    toast('已导出 '+CUR.length+' 条 CSV');
+  };
+  $('copyLink').onclick = function(){
+    copy(location.href); toast('链接已复制，可直接发给课题组同学');
+  };
+
+  function copy(text){
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text);
+    else { var ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta);
+           ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }
+  }
+  var tt=null;
+  function toast(msg){ var el=$('toast'); el.textContent=msg; el.classList.add('show');
+    clearTimeout(tt); tt=setTimeout(function(){ el.classList.remove('show'); },1900); }
+
+  // ---------------- URL 状态（便于分享筛选结果） ----------------
+  function syncHash(){
+    var o = {};
+    if(S.q) o.q=S.q;
+    if(S.journals.size) o.j=[].concat(Array.from(S.journals)).join(',');
+    if(S.cats.size) o.c=[].concat(Array.from(S.cats)).join(',');
+    o.y = S.yMin===null ? 'all' : (S.yMax===null ? S.yMin+'-' : (S.yMin===S.yMax ? String(S.yMin) : S.yMin+'-'+S.yMax));
+    if(S.oa) o.oa=1;
+    if(!S.research) o.r='0';
+    if(S.sort!=='year') o.s=S.sort;
+    var qs = Object.keys(o).map(function(k){return k+'='+encodeURIComponent(o[k]);}).join('&');
+    history.replaceState(null,'', qs ? '#'+qs : location.pathname);
+  }
+  function readHash(){
+    var h = location.hash.replace(/^#/,''); if(!h) return;
+    h.split('&').forEach(function(kv){
+      var i = kv.indexOf('='); if(i<0) return;
+      var k = kv.slice(0,i), v = decodeURIComponent(kv.slice(i+1));
+      if(k==='q'){ S.q=v; $('q').value=v; $('qClr').style.display='block'; }
+      if(k==='j') v.split(',').forEach(function(x){ if(x) S.journals.add(x); });
+      if(k==='c') v.split(',').forEach(function(x){ if(x) S.cats.add(x); });
+      if(k==='oa'){ S.oa=true; $('oa').checked=true; $('oaWrap').classList.add('on'); }
+      if(k==='r'){ S.research = (v!=='0'); $('res').checked=S.research; $('resWrap').classList.toggle('on',S.research); }
+      if(k==='s'){ S.sort=v; $('sort').value=v; }
+      if(k==='y'){
+        if(v==='all' || v===''){ S.yMin=null; S.yMax=null; }
+        else if(v.indexOf('-')>0){
+          var a=v.split('-'); S.yMin=+a[0]; S.yMax = (a[1]==='' ? null : +a[1]);
+        } else { S.yMin=S.yMax=+v; }
+      }
+    });
+    Array.prototype.forEach.call(jChips.children, function(el,i){
+      if(M.journals[i] && S.journals.has(M.journals[i][0])) el.classList.add('on');
+    });
+    syncChips();
+    Array.prototype.forEach.call(document.querySelectorAll('.cat'), function(x){
+      if(S.cats.has(x.dataset.cid)) x.classList.add('on');
+    });
+  }
+
+  readHash();
+  render();
+})();
+</script>
+</body>
+</html>
